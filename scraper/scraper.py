@@ -1,4 +1,13 @@
 import requests
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from database.database import save_product
+#connecting the scraper to the database
+
+
+
 from bs4 import BeautifulSoup
 
 def scrape_product(url):
@@ -15,6 +24,7 @@ def scrape_product(url):
     "ingredients" : ingredients
 
 }
-result=scrape_product("https://incidecoder.com/products/vanicream-moisturizer")
-print(result)
+result = scrape_product("https://incidecoder.com/products/vanicream-moisturizer")
+save_product(result["name"], "https://incidecoder.com/products/vanicream-moisturizer", result["ingredients"])
+print("Saved:", result["name"])
 
