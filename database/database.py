@@ -1,0 +1,26 @@
+import sqlite3
+
+def init_db():
+    conn = sqlite3.connect("data/products.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS products (
+            id INTEGER PRIMARY KEY,
+            name TEXT,
+            url TEXT,
+            ingredients TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def save_product(name, url, ingredients):
+    conn = sqlite3.connect("data/products.db")
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO products (name, url, ingredients) VALUES (?, ?, ?)",
+                   (name, url, ",".join(ingredients)))
+    conn.commit()
+    conn.close()
+
+init_db()
+print("Database is ready!!!")
