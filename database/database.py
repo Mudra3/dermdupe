@@ -21,6 +21,19 @@ def save_product(name, url, ingredients):
                    (name, url, ",".join(ingredients)))
     conn.commit()
     conn.close()
-
+def get_all_products():
+  conn = sqlite3.connect("data/products.db")
+  cursor = conn.cursor()
+  cursor.execute("SELECT name, url, ingredients FROM products")
+  rows = cursor.fetchall()
+  conn.close()
+  products = []
+  for row in rows:
+        products.append({
+            "name": row[0],
+            "url": row[1],
+            "ingredients": row[2]
+        })
+  return products
 init_db()
 print("Database is ready!!!")
