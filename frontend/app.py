@@ -22,7 +22,7 @@ def jaccard_similarity(list1, list2):
         return 0
     return len(intersection) / len(union)
 
-def find_dupes(target_ingredients, all_products, threshold=0.5):
+def find_dupes(target_ingredients, all_products, threshold=0.3):
     dupes = []
     for product in all_products:
         ingredients = product["ingredients"].split(",")
