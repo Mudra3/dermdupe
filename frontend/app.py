@@ -4,6 +4,23 @@ import os
 
 app = Flask(__name__)
 
+def get_ingredients_from_description(description):
+    description = description.lower()
+    ingredients = []
+    if any(word in description for word in ["hydrating", "moisture", "dry skin"]):
+        ingredients += ["Glycerin", "Hyaluronic Acid", "Squalane", "Ceramide NP"]
+    if any(word in description for word in ["brightening", "glow", "vitamin c"]):
+        ingredients += ["Niacinamide", "Ascorbic Acid", "Kojic Acid"]
+    if any(word in description for word in ["anti aging", "wrinkle", "retinol"]):
+        ingredients += ["Retinol", "Peptides", "Collagen", "Adenosine"]
+    if any(word in description for word in ["acne", "oily", "pores", "breakout"]):
+        ingredients += ["Salicylic Acid", "Niacinamide", "Zinc", "Tea Tree"]
+    if any(word in description for word in ["sensitive", "calm", "redness"]):
+        ingredients += ["Centella Asiatica", "Aloe Vera", "Ceramide EOP", "Panthenol"]
+    if not ingredients:
+        ingredients = ["Glycerin", "Water", "Niacinamide"]
+    return ingredients
+
 def get_all_products():
     db_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'products.db')
     conn = sqlite3.connect(db_path)
@@ -22,7 +39,7 @@ def jaccard_similarity(list1, list2):
         return 0
     return len(intersection) / len(union)
 
-def find_dupes(target_ingredients, all_products, threshold=0.3):
+def find_dupes(target_ingredients, all_products, threshold=0.1):
     dupes = []
     for product in all_products:
         ingredients = product["ingredients"].split(",")
@@ -39,6 +56,14 @@ def home():
 def search():
     ingredients = request.form.get("ingredients")
     ingredient_list = [i.strip() for i in ingredients.split(",")]
+    all_products = get_all_products()
+    dupes = find_dupes(ingredient_list, all_products)
+    return render_template("results.html", dupes=dupes)
+
+@app.route("/ai-search", methods=["POST"])
+def ai_search():
+    description = request.form.get("description")
+    ingredient_list = get_ingredients_from_description(description)
     all_products = get_all_products()
     dupes = find_dupes(ingredient_list, all_products)
     return render_template("results.html", dupes=dupes)
