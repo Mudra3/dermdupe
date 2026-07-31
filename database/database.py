@@ -27,7 +27,7 @@ def get_all_products():
   cursor.execute("SELECT name, url, ingredients FROM products")
   rows = cursor.fetchall()
   conn.close()
-  products = []
+  products = [] 
   for row in rows:
         products.append({
             "name": row[0],
