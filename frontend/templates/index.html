@@ -1,26 +1,363 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>DermDupe</title>
-        <style>
-            body { font-family: Arial, sans- serif; max-width: 600px; margin: 50px auto; }
-        input { width: 100%; padding: 10px; font-size: 16px; }
-        button { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; font-size: 16px; margin-top: 10px; }
-    </style>
-</head>
-<body> 
-    <h1>DermDupe</h1>
-    <p>Find cheaper dupes for your skincare products</p>
-    <form action="/search" method="POST">
-        <input type="text" name="ingredients" placeholder="Paste ingredients here e.g. Water, Glycerin, Niacinamide">
-        <button type="submit">Find Dupes</button>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DermDupe — Find Your Skincare Dupe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
 
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: linear-gradient(160deg, #fff0f9 0%, #f5f0ff 50%, #f0fff6 100%);
+      min-height: 100vh;
+    }
+
+    @keyframes typeIn {
+      from { opacity:0; transform:translateY(-30px) scale(0.8); filter:blur(6px); }
+      to   { opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(16px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    @keyframes float {
+      0%,100% { transform:translateY(0); }
+      50%     { transform:translateY(-6px); }
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; }
+      50%     { opacity:0.4; }
+    }
+    @keyframes shimmer {
+      0%   { background-position:-200% center; }
+      100% { background-position:200% center; }
+    }
+
+    /* NAV */
+    nav {
+      padding: 18px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,200,230,0.3);
+      position: sticky; top: 0; z-index: 100;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px; font-weight: 800;
+      color: #c87aaa;
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .logo-icon {
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .logo span { color: #ff2d78; }
+
+    .tech-pills { display:flex; gap:7px; flex-wrap:wrap; }
+
+    .tech-pill {
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(196,181,253,0.4);
+      color: #a78bfa;
+      padding: 4px 12px; border-radius: 50px;
+      font-size: 11px; font-weight: 600;
+      transition: all 0.2s; cursor: default;
+    }
+    .tech-pill:hover {
+      background: #ede9fe;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(167,139,250,0.2);
+    }
+
+    /* HERO */
+    .hero {
+      max-width: 680px; margin: 0 auto;
+      padding: 64px 24px 28px; text-align: center;
+    }
+
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid #fbb6d4; color: #d97baa;
+      padding: 7px 18px; border-radius: 50px;
+      font-size: 12px; font-weight: 600;
+      margin-bottom: 28px;
+      animation: fadeUp 0.5s 0.1s ease both;
+      box-shadow: 0 2px 12px rgba(251,182,212,0.2);
+    }
+    .live-dot {
+      width: 7px; height: 7px;
+      background: #ff2d78; border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    /* ANIMATED HEADLINE */
+    .headline {
+      font-family: 'Syne', sans-serif;
+      font-size: 50px; font-weight: 800;
+      color: #c87aaa; line-height: 1.15;
+      margin-bottom: 16px; min-height: 180px;
+    }
+
+    .headline .word {
+      display: inline-block;
+      opacity: 0;
+      animation: typeIn 0.5s cubic-bezier(0.22,1,0.36,1) forwards;
+    }
+
+    .headline .pink { color: #ff2d78; }
+
+    .subtitle {
+      font-size: 15px; color: #c4a0b8;
+      line-height: 1.85; margin-bottom: 36px;
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards;
+    }
+
+    .subtitle .green { color: #4ade80; font-weight: 600; }
+
+    /* SEARCH */
+    .search-section {
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards;
+    }
+
+    .search-card {
+      background: rgba(255,255,255,0.85);
+      border-radius: 22px; padding: 9px;
+      border: 1px solid rgba(251,182,212,0.35);
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+      transition: all 0.3s;
+      box-shadow: 0 2px 20px rgba(196,122,176,0.07);
+      backdrop-filter: blur(8px);
+    }
+    .search-card:focus-within {
+      border-color: #fbb6d4;
+      box-shadow: 0 6px 28px rgba(196,122,176,0.18);
+      transform: translateY(-2px);
+    }
+
+    .search-card input {
+      flex: 1; border: none; outline: none;
+      padding: 12px 16px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px; color: #c87aaa;
+      background: transparent;
+    }
+    .search-card input::placeholder { color: #d4aec4; }
+
+    .btn-pink {
+      background: linear-gradient(135deg, #ff2d78, #e879f9);
+      color: white; padding: 12px 22px; border-radius: 15px;
+      font-weight: 700; font-size: 13px; cursor: pointer;
+      white-space: nowrap; border: none;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: all 0.3s;
+      box-shadow: 0 4px 14px rgba(255,45,120,0.3);
+    }
+    .btn-pink:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(255,45,120,0.45);
+    }
+
+    .btn-green {
+      background: linear-gradient(135deg, #86efac, #34d399);
+      color: white; padding: 12px 22px; border-radius: 15px;
+      font-weight: 700; font-size: 13px; cursor: pointer;
+      white-space: nowrap; border: none;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: all 0.3s;
+      box-shadow: 0 4px 14px rgba(52,211,153,0.3);
+    }
+    .btn-green:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(52,211,153,0.45);
+    }
+
+    /* STATS */
+    .stats {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px; max-width: 680px;
+      margin: 16px auto; padding: 0 24px;
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.8);
+      border-radius: 18px; padding: 20px 16px;
+      border: 1px solid rgba(251,182,212,0.3);
+      text-align: center; transition: all 0.3s;
+      backdrop-filter: blur(8px);
+    }
+    .stat:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(196,122,176,0.12);
+      border-color: #fbb6d4;
+    }
+
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px; font-weight: 800;
+      color: #ff2d78; margin-bottom: 4px;
+    }
+    .stat-label { font-size: 11px; color: #c4a0b8; line-height: 1.5; }
+
+    /* ALGO CARD */
+    .algo-wrap {
+      max-width: 680px; margin: 0 auto;
+      padding: 0 24px 56px;
+      opacity: 0;
+      animation: fadeUp 0.5s ease forwards;
+    }
+
+    .algo-card {
+      background: rgba(255,255,255,0.75);
+      border: 1px solid rgba(196,181,253,0.3);
+      border-radius: 20px; padding: 22px 26px;
+      display: flex; align-items: center; gap: 18px;
+      backdrop-filter: blur(8px); transition: all 0.3s;
+    }
+    .algo-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(196,122,176,0.1);
+    }
+
+    .algo-emoji { font-size: 30px; animation: float 4s ease-in-out infinite; }
+    .algo-title { font-size: 14px; font-weight: 700; color: #c87aaa; margin-bottom: 5px; }
+    .algo-desc { font-size: 12px; color: #c4a0b8; line-height: 1.65; }
+
+    /* LOGO DROPLET */
+    .logo-drop {
+      width: 36px; height: 36px;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <svg class="logo-icon" width="36" height="36" viewBox="0 0 40 40">
+      <path d="M20 3 C20 3 6 18 6 26 a14 14 0 0 0 28 0 C34 18 20 3 20 3Z" fill="url(#logoGrad)"/>
+      <defs>
+        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#ff2d78"/>
+          <stop offset="50%" style="stop-color:#c084fc"/>
+          <stop offset="100%" style="stop-color:#86efac"/>
+        </linearGradient>
+      </defs>
+      <text x="20" y="31" text-anchor="middle" font-family="Syne" font-weight="900" font-size="12" fill="white">DD</text>
+    </svg>
+    Derm<span>Dupe</span>
+  </div>
+  <div class="tech-pills">
+    <span class="tech-pill">Python</span>
+    <span class="tech-pill">Flask</span>
+    <span class="tech-pill">SQLite</span>
+    <span class="tech-pill">BeautifulSoup</span>
+    <span class="tech-pill">Jaccard Similarity</span>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="live-badge">
+    <span class="live-dot"></span>
+    AI-powered ingredient matching
+  </div>
+
+  <div class="headline" id="headline"></div>
+
+  <p class="subtitle" id="subtitle">
+    DermDupe uses <span class="green">Jaccard similarity scoring</span> to compare ingredient lists and surface cheaper skincare alternatives — because great skin shouldn't break the bank.
+  </p>
+
+  <div class="search-section" id="searchSection">
+    <form action="/search" method="POST">
+      <div class="search-card">
+        <input name="ingredients" placeholder="Paste ingredients: Water, Glycerin, Niacinamide..."/>
+        <button type="submit" class="btn-pink">Find dupes →</button>
+      </div>
     </form>
-    <hr>
-<h3>Or describe what you're looking for:</h3>
-<form action="/ai-search" method="POST">
-    <input type="text" name="description" placeholder="e.g. hydrating moisturizer for dry skin">
-    <button type="submit">AI Search</button>
-</form> 
+    <form action="/ai-search" method="POST">
+      <div class="search-card">
+        <input name="description" placeholder="Or describe it: hydrating moisturizer for sensitive skin..."/>
+        <button type="submit" class="btn-green">AI search ✨</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="stats" id="stats">
+  <div class="stat">
+    <div class="stat-num">90%+</div>
+    <div class="stat-label">Ingredient match threshold</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">50+</div>
+    <div class="stat-label">Products indexed</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">AI</div>
+    <div class="stat-label">Natural language search</div>
+  </div>
+</div>
+
+<div class="algo-wrap" id="algoWrap">
+  <div class="algo-card">
+    <div class="algo-emoji">🔬</div>
+    <div>
+      <div class="algo-title">Jaccard Similarity Algorithm</div>
+      <div class="algo-desc">Compares ingredient sets by calculating intersection over union — the same technique used in ML and data science to measure set similarity between two collections.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const words = [
+    { text: "Your", pink: false },
+    { text: "skin's", pink: false },
+    { text: "\n", pink: false },
+    { text: "cheat", pink: true },
+    { text: "code", pink: true },
+    { text: "\n", pink: false },
+    { text: "for", pink: false },
+    { text: "expensive", pink: false },
+    { text: "skincare.", pink: false },
+  ];
+
+  const headline = document.getElementById('headline');
+  let delay = 0;
+
+  words.forEach(w => {
+    if (w.text === "\n") {
+      headline.appendChild(document.createElement('br'));
+      return;
+    }
+    const span = document.createElement('span');
+    span.classList.add('word');
+    if (w.pink) span.classList.add('pink');
+    span.textContent = w.text + "\u00A0";
+    span.style.animationDelay = delay + 's';
+    headline.appendChild(span);
+    delay += 0.15;
+  });
+
+  const totalDelay = delay;
+
+  document.getElementById('subtitle').style.animationDelay = totalDelay + 's';
+  document.getElementById('searchSection').style.animationDelay = (totalDelay + 0.15) + 's';
+  document.getElementById('stats').style.animationDelay = (totalDelay + 0.3) + 's';
+  document.getElementById('algoWrap').style.animationDelay = (totalDelay + 0.45) + 's';
+</script>
+
 </body>
 </html>
