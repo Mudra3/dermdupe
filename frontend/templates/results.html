@@ -1,30 +1,245 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>DermDupe Results</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width:600px; margin: 50px auto;}
-        .dupe { border: 1px solid #ddd; padding: 15 px; margin: 10px 0; border-radius: 5px;}
-        .score { color: green; font-weight: bold; }
-        a { color: green; font-weight: bold; } 
-        a { color:#4CAF50;  }
-    </style>
-    </head>
-    <body> 
-        <h1> DermDupe Results </h1>
-        <a href="/">Search Again</a>
-    <br><br>
-    {% if dupes %}
-        <h3>Found {{ dupes|length }} dupe(s)!</h3>
-        {% for dupe in dupes %}
-        <div class="dupe">
-            <h3>{{ dupe.name }}</h3>
-            <p class="score">Match: {{ dupe.score }}%</p>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DermDupe — Results</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: linear-gradient(160deg, #fff0f9 0%, #f5f0ff 50%, #f0fff6 100%);
+      min-height: 100vh;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(16px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    @keyframes float {
+      0%,100% { transform:translateY(0); }
+      50%     { transform:translateY(-6px); }
+    }
+    @keyframes shimmer {
+      0%   { background-position:-200% center; }
+      100% { background-position:200% center; }
+    }
+    @keyframes cardIn {
+      from { opacity:0; transform:translateY(20px) scale(0.97); }
+      to   { opacity:1; transform:translateY(0) scale(1); }
+    }
+
+    nav {
+      padding: 18px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,200,230,0.3);
+      position: sticky; top: 0; z-index: 100;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px; font-weight: 800;
+      color: #c87aaa;
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none;
+    }
+    .logo span { color: #ff2d78; }
+
+    .logo-icon { animation: float 4s ease-in-out infinite; }
+
+    .back-btn {
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(251,182,212,0.4);
+      color: #d97baa;
+      padding: 8px 18px; border-radius: 50px;
+      font-size: 13px; font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:hover {
+      background: #fff0f6;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(255,45,120,0.1);
+    }
+
+    .container {
+      max-width: 680px; margin: 0 auto;
+      padding: 48px 24px 64px;
+    }
+
+    .results-header {
+      text-align: center; margin-bottom: 36px;
+      animation: fadeUp 0.5s 0.1s ease both; opacity: 0;
+    }
+
+    .results-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 36px; font-weight: 800;
+      color: #c87aaa; margin-bottom: 8px;
+    }
+
+    .results-title .pink { color: #ff2d78; }
+
+    .results-count {
+      font-size: 14px; color: #c4a0b8;
+    }
+
+    .results-count strong {
+      color: #ff2d78; font-weight: 700;
+    }
+
+    .dupe-card {
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(251,182,212,0.3);
+      border-radius: 20px; padding: 24px 28px;
+      margin-bottom: 14px;
+      backdrop-filter: blur(8px);
+      transition: all 0.3s;
+      opacity: 0;
+      animation: cardIn 0.5s ease forwards;
+    }
+
+    .dupe-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(196,122,176,0.15);
+      border-color: #fbb6d4;
+    }
+
+    .dupe-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .dupe-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px; font-weight: 700;
+      color: #c87aaa;
+    }
+
+    .score-badge {
+      padding: 6px 14px; border-radius: 50px;
+      font-size: 13px; font-weight: 700;
+    }
+
+    .score-high {
+      background: #f0fdf4;
+      color: #16a34a;
+      border: 1px solid #bbf7d0;
+    }
+
+    .score-mid {
+      background: #fff0f9;
+      color: #ff2d78;
+      border: 1px solid #fbb6d4;
+    }
+
+    .score-low {
+      background: #f5f0ff;
+      color: #9333ea;
+      border: 1px solid #e9d5ff;
+    }
+
+    .score-bar-wrap {
+      background: #fdf0f6;
+      border-radius: 50px; height: 6px;
+      overflow: hidden;
+    }
+
+    .score-bar {
+      height: 100%; border-radius: 50px;
+      background: linear-gradient(90deg, #fbb6d4, #ff2d78);
+      transition: width 1s ease;
+    }
+
+    .empty-state {
+      text-align: center; padding: 60px 24px;
+      animation: fadeUp 0.5s 0.2s ease both; opacity: 0;
+    }
+
+    .empty-emoji { font-size: 48px; margin-bottom: 16px; }
+
+    .empty-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px; font-weight: 800;
+      color: #c87aaa; margin-bottom: 8px;
+    }
+
+    .empty-sub { font-size: 14px; color: #c4a0b8; line-height: 1.7; }
+
+    .try-again {
+      display: inline-block;
+      background: linear-gradient(135deg, #ff2d78, #e879f9);
+      color: white; padding: 12px 28px;
+      border-radius: 50px; font-weight: 700;
+      font-size: 14px; text-decoration: none;
+      margin-top: 20px; transition: all 0.3s;
+      box-shadow: 0 4px 14px rgba(255,45,120,0.3);
+    }
+    .try-again:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(255,45,120,0.4);
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">
+    <svg class="logo-icon" width="36" height="36" viewBox="0 0 40 40">
+      <path d="M20 3 C20 3 6 18 6 26 a14 14 0 0 0 28 0 C34 18 20 3 20 3Z" fill="url(#logoGrad2)"/>
+      <defs>
+        <linearGradient id="logoGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#ff2d78"/>
+          <stop offset="50%" style="stop-color:#c084fc"/>
+          <stop offset="100%" style="stop-color:#86efac"/>
+        </linearGradient>
+      </defs>
+      <text x="20" y="31" text-anchor="middle" font-family="Syne" font-weight="900" font-size="12" fill="white">DD</text>
+    </svg>
+    Derm<span>Dupe</span>
+  </a>
+  <a href="/" class="back-btn">← Search again</a>
+</nav>
+
+<div class="container">
+  {% if dupes %}
+    <div class="results-header">
+      <div class="results-title">Found <span class="pink">{{ dupes|length }}</span> dupe{{ 's' if dupes|length != 1 }}!</div>
+      <div class="results-count">Sorted by ingredient match score</div>
+    </div>
+
+    {% for dupe in dupes %}
+    <div class="dupe-card" style="animation-delay: {{ loop.index * 0.08 }}s;">
+      <div class="dupe-header">
+        <div class="dupe-name">{{ dupe.name }}</div>
+        <div class="score-badge {% if dupe.score >= 50 %}score-high{% elif dupe.score >= 25 %}score-mid{% else %}score-low{% endif %}">
+          {{ dupe.score }}% match
         </div>
-        {% endfor %}
-    {% else %}
-        <p>No dupes found. Try lowering the match threshold!</p>
-    {% endif %}
+      </div>
+      <div class="score-bar-wrap">
+        <div class="score-bar" style="width: {{ dupe.score }}%;"></div>
+      </div>
+    </div>
+    {% endfor %}
+
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-emoji">🔍</div>
+      <div class="empty-title">No dupes found</div>
+      <div class="empty-sub">Try lowering your match threshold or paste a different ingredient list.</div>
+      <a href="/" class="try-again">Try again →</a>
+    </div>
+  {% endif %}
+</div>
+
 </body>
 </html>
-    

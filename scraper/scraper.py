@@ -27,11 +27,26 @@ def get_product_urls(search_url):
         urls.append(full_url)
     return urls
 
-search_url = "https://incidecoder.com/search?query=moisturizer"
-urls = get_product_urls(search_url)
-print(f"Found {len(urls)} products")
+search_queries = [
+    "moisturizer",
+    "serum",
+    "sunscreen",
+    "toner",
+    "cleanser",
+    "eye cream",
+    "face oil",
+    "exfoliant"
+]
 
-for url in urls:
-    result = scrape_product(url)
-    save_product(result["name"], url, result["ingredients"])
-    print("Saved:", result["name"])
+for query in search_queries:
+    print(f"\nScraping: {query}")
+    search_url = f"https://incidecoder.com/search?query={query}"
+    urls = get_product_urls(search_url)
+    print(f"Found {len(urls)} products")
+    for url in urls:
+        try:
+            result = scrape_product(url)
+            save_product(result["name"], url, result["ingredients"])
+            print("Saved:", result["name"])
+        except Exception as e:
+            print(f"Skipped {url}: {e}")
