@@ -16,6 +16,18 @@ def scrape_product(url):
         "ingredients": ingredients
     }
 
+def scrape_product_by_name(product_name):
+    search_url = f"https://incidecoder.com/search?query={product_name.replace(' ', '+')}"
+    response = requests.get(search_url)
+    soup = BeautifulSoup(response.text, "html.parser")
+    first_result = soup.find("a", class_="simpletextlistitem")
+    if not first_result:
+        return None
+    product_url = "https://incidecoder.com" + first_result.get("href")
+    result = scrape_product(product_url)
+    result["url"] = product_url
+    return result
+
 def get_product_urls(search_url):
     response = requests.get(search_url)
     soup = BeautifulSoup(response.text, "html.parser")
@@ -46,7 +58,7 @@ for query in search_queries:
     for url in urls:
         try:
             result = scrape_product(url)
-            save_product(result["name"], url, result["ingredients"])
+            save_product(result["name"], url, result["ingredients"], category=query)
             print("Saved:", result["name"])
         except Exception as e:
             print(f"Skipped {url}: {e}")

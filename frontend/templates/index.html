@@ -182,7 +182,19 @@
       transform: translateY(-2px);
       box-shadow: 0 8px 22px rgba(52,211,153,0.45);
     }
-
+.btn-purple {
+  background: linear-gradient(135deg, #c084fc, #818cf8);
+  color: white; padding: 12px 22px; border-radius: 15px;
+  font-weight: 700; font-size: 13px; cursor: pointer;
+  white-space: nowrap; border: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.3s;
+  box-shadow: 0 4px 14px rgba(192,132,252,0.3);
+}
+.btn-purple:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(192,132,252,0.45);
+}
     /* STATS */
     .stats {
       display: grid; grid-template-columns: 1fr 1fr 1fr;
@@ -293,6 +305,12 @@
         <button type="submit" class="btn-green">AI search ✨</button>
       </div>
     </form>
+    <form action="/product-search" method="POST">
+  <div class="search-card">
+    <input name="product_name" placeholder="Type a product name: e.g. Drunk Elephant Protini..."/>
+    <button type="submit" class="btn-purple">Find dupes 🔍</button>
+  </div>
+</form>
   </div>
 </div>
 

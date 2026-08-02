@@ -57,16 +57,49 @@ def search():
     ingredients = request.form.get("ingredients")
     ingredient_list = [i.strip() for i in ingredients.split(",")]
     all_products = get_all_products()
-    dupes = find_dupes(ingredient_list, all_products)
+    dupes = sorted(find_dupes(ingredient_list, all_products), key=lambda x: x["score"], reverse=True)
     return render_template("results.html", dupes=dupes)
 
-@app.route("/ai-search", methods=["POST"])
-def ai_search():
-    description = request.form.get("description")
-    ingredient_list = get_ingredients_from_description(description)
+@app.route("/product-search", methods=["POST"])
+def product_search():
+    product_name = request.form.get("product_name")
+    
+    try:
+        import requests as req
+        from bs4 import BeautifulSoup
+        
+        search_url = f"https://incidecoder.com/search?query={product_name.replace(' ', '+')}"
+        response = req.get(search_url)
+        soup = BeautifulSoup(response.text, "html.parser")
+        first_result = soup.find("a", class_="simpletextlistitem")
+        
+        if not first_result:
+            return render_template("results.html", dupes=[])
+        
+        product_url = "https://incidecoder.com" + first_result.get("href")
+        product_response = req.get(product_url)
+        product_soup = BeautifulSoup(product_response.text, "html.parser")
+        ingredient_tags = product_soup.find_all("a", class_="ingred-link")
+        ingredient_list = [tag.text.strip().replace("\n", "").strip() for tag in ingredient_tags]
+        
+        if not ingredient_list:
+            return render_template("results.html", dupes=[])
+        
+        all_products = get_all_products()
+        dupes = sorted(find_dupes(ingredient_list, all_products), key=lambda x: x["score"], reverse=True)
+        return render_template("results.html", dupes=dupes)
+    
+    except Exception as e:
+        print(f"Error: {e}")
+        return render_template("results.html", dupes=[])
+    
+    if not result:
+        return render_template("results.html", dupes=[], error="Product not found on INCI Decoder")
+    
+    ingredient_list = result["ingredients"]
     all_products = get_all_products()
-    dupes = find_dupes(ingredient_list, all_products)
-    return render_template("results.html", dupes=dupes)
-
+    dupes = sorted(find_dupes(ingredient_list, all_products), key=lambda x: x["score"], reverse=True)
+    
+    return render_template("results.html", dupes=dupes, searched_product=result["name"])
 if __name__ == "__main__":
     app.run(debug=True)

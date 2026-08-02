@@ -8,18 +8,28 @@ def init_db():
             id INTEGER PRIMARY KEY,
             name TEXT,
             url TEXT,
-            ingredients TEXT
+            ingredients TEXT,
+            category TEXT
         )
     """)
+    
+    
+    try:
+        cursor.execute("ALTER TABLE products ADD COLUMN category TEXT")
+    except:
+        pass
+    
     conn.commit()
     conn.close()
 
-def save_product(name, url, ingredients):
+def save_product(name, url, ingredients, category="unknown"):
     conn = sqlite3.connect("data/products.db")
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO products (name, url, ingredients) VALUES (?, ?, ?)",
-                   (name, url, ",".join(ingredients)))
-    conn.commit()
+    cursor.execute("SELECT id FROM products WHERE url = ?", (url,))
+    if cursor.fetchone() is None:
+        cursor.execute("INSERT INTO products (name, url, ingredients, category) VALUES (?, ?, ?, ?)",
+                       (name, url, ",".join(ingredients), category))
+        conn.commit()
     conn.close()
 def get_all_products():
   conn = sqlite3.connect("data/products.db")
